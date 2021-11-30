@@ -1,0 +1,11 @@
+.Rhistory
+.Rproj.user/
+old/
+other/
+DigitalDLSorter_utils/
+Data/CRC_atlas/
+B_matrix_CSV.csv
+B_matrix_TXT.txt
+CRC_initial.h5Seurat
+UB_matrix_CSV.csv
+UB_matrix_TXT.txt

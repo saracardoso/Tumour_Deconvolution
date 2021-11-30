@@ -20,7 +20,7 @@ test_results_dir = './Results/1_Parameter_Optimization/test/proportions'
 ground_truth_file = './Data/bulk/CRC/NICs/data/cell_proportions.csv'
 
 methods_colours = c('#ffdb6d', '#c4961a', '#b30000', '#d16103', '#c3d7a4', '#52854c', '#4e84c4','#293352', '#999999', '#cc79a7')
-names(methods_colours) = names(predicted_proportions)
+names(methods_colours) = methods
 
 
 
@@ -73,27 +73,30 @@ ggplot2::ggplot(df_test_scatter_metrics, ggplot2::aes(RMSE, Correlation, colour=
   ggplot2::scale_colour_manual(values=c('#ffdb6d', '#c4961a', '#b30000', '#d16103', '#c3d7a4',
                                         '#52854c', '#4e84c4','#293352', '#999999', '#cc79a7'))
 
-# 5. Scatter plot of rmses vs correlations, for each sample:
+# 6. Scatter plot of rmses vs correlations, for each sample:
 df_test_scatter_metrics_samples = data.frame(Method=rep(methods, 7),
                                              RMSE=as.numeric(test_rmses_samples_methods), Correlation=as.numeric(test_cor_samples_methods),
-                                             quality=rep(c('Best methods', 'Worst methods', 'Worst methods', 'Best methods', 'Best methods',
-                                                           'Worst methods', 'Worst methods', 'Best methods', 'Best methods', 'Worst methods'),
-                                                         7),
+                                             CMS=c(rep('CMS2', 10), rep('CMS3', 10), rep('CMS1', 10), rep('Mixed', 10), rep('CMS4', 10),
+                                                   rep('Mixed', 10), rep('CMS2', 10)),
                                              Sample=c(rep('NIC5', 10), rep('NIC6', 10), rep('NIC12', 10), rep('NIC16', 10), rep('NIC21', 10),
                                                        rep('NIC27', 10), rep('NIC22nova', 10)))
-# 5.1. Coloured by method:
+# 6.1. Coloured by method:
 ggplot2::ggplot(df_test_scatter_metrics_samples, ggplot2::aes(RMSE, Correlation, colour=Method)) +
   ggplot2::geom_point(size=2) + ggplot2::xlim(0,.3) +
   ggplot2::scale_colour_manual(values=methods_colours)
-# 5.2. Coloured by samples:
+# 6.2. Coloured by samples:
 ggplot2::ggplot(df_test_scatter_metrics_samples, ggplot2::aes(RMSE, Correlation, colour=Sample)) +
   ggplot2::geom_point(size=2) + ggplot2::xlim(0,.3) +
   ggplot2::scale_colour_manual(values=c('#ffdb6d', '#c4961a', '#b30000', '#d16103', '#c3d7a4',
                                         '#52854c', '#4e84c4','#293352', '#999999', '#cc79a7'))
+# 6.3. Coloured by CMS type:
+ggplot2::ggplot(df_test_scatter_metrics_samples, ggplot2::aes(RMSE, Correlation, colour=CMS)) +
+  ggplot2::geom_point(size=2) + ggplot2::xlim(0,.3) +
+  ggplot2::scale_colour_manual(values=c('#b30000', '#d16103', '#52854c', '#4e84c4','#999999', '#cc79a7'))
 
 
 
-# 6. Scatter plot of rmses vs correlations, by each cell-type
+# 7. Scatter plot of rmses vs correlations, by each cell-type
 test_cor_cell_types_methods = c()
 test_rmse_cell_types_methods = c()
 test_samples = c('NIC5', 'NIC6', 'NIC12', 'NIC16', 'NIC21', 'NIC27', 'NIC22nova')
@@ -112,7 +115,8 @@ for(method in methods){
 }
 df_test_scatter_metrics_cellTypes = data.frame(Method=methods_df, RMSE=test_rmse_cell_types_methods, Correlation=test_cor_cell_types_methods,
                                                CellTypes=cellTypes_df)
-df_test_scatter_metrics_cellTypes[is.na(df_test_scatter_metrics_cellTypes)] = 0
+df_test_scatter_metrics_cellTypes = df_test_scatter_metrics_cellTypes[!is.na(df_test_scatter_metrics_cellTypes$Correlation),]
+df_test_scatter_metrics_cellTypes$CellTypes = factor(df_test_scatter_metrics_cellTypes$CellTypes, levels=cell_types)
 ggplot2::ggplot(df_test_scatter_metrics_cellTypes, ggplot2::aes(RMSE, Correlation, colour=Method)) + 
   ggplot2::facet_wrap(ggplot2::vars(CellTypes)) +
   ggplot2::geom_point(size=3) + ggplot2::ylim(-.75,1) + ggplot2::xlim(0,.61) +
@@ -120,7 +124,7 @@ ggplot2::ggplot(df_test_scatter_metrics_cellTypes, ggplot2::aes(RMSE, Correlatio
 
 
 
-# 7. Scatter plots of proportions predicted vs ground truth
+# 8. Scatter plots of proportions predicted vs ground truth
 plot_estimated_vs_groundTruth_single_method(predicted_proportions$AutoGeneS, ground_truth_proportions, cell_types, cell_type_colors)
 plot_estimated_vs_groundTruth_single_method(predicted_proportions$AutoGeneS, ground_truth_proportions, cell_types, cell_type_colors,
                                             annotate=FALSE, xlim=c(0, .2), ylim=c(0, .2))
@@ -163,7 +167,7 @@ plot_estimated_vs_groundTruth_single_method(predicted_proportions$SCDC, ground_t
 
 
 
-# 8. Scatter plots of proportions predicted vs ground truth by method for a cell-type
+# 9. Scatter plots of proportions predicted vs ground truth by method for a cell-type
 plot_estimated_vs_groundTruth_perMethod_singleCT(predicted_proportions, ground_truth_proportions, 'Cancer cells', methods_colours,
                                                  xlim=c(0, 1), ylim=c(0, 1))
 plot_estimated_vs_groundTruth_perMethod_singleCT(predicted_proportions[c('AutoGeneS', 'CIBERSORTx', 'DWLS', 'MuSiC_woGrouping', 'Scaden')],
@@ -238,8 +242,4 @@ plot_estimated_vs_groundTruth_perMethod_singleCT(predicted_proportions[c('AutoGe
                                                  ground_truth_proportions, 'Other cells', methods_colours,
                                                  xlim=c(0, .3), ylim=c(0, .3))
 
-
-
-c('Cancer cells', 'Stromal cells', 'Anti-Inflammatory macro/mono', 'Pro-Inflammatory macro/mono', 'Bcells',
-  'CD4 Tcells', 'Regulatory CD4 Tcells', 'CD8 Tcells', 'Proliferative Tcells', 'NK cells', 'Other cells')
 

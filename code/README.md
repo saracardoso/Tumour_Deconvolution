@@ -1,11 +1,4 @@
----
-title: "How to install the necessary packages"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+# How to install the necessary packages
 
 This file will explain how to install the deconvolution tools used in this project, as well as other relevant tools used.
 

@@ -287,8 +287,12 @@ for(ref in c('corrected', 'uncorrected')){
     simul_proportional = FALSE
     if(combo$simul_proportional=='YES') simul_proportional = TRUE
     DDLSorter_obj = prepare_singlecellexperiment_scReferences(references[[ref]], 'Deconv_cellTypes', 10, combo$load_min.counts, 'DDLS')
-    DDLS_objects[[ref]][[combo_name]] = simulate_cells(DDLSorter_obj, 1000, c('NK cells', 'Proliferative Tcells'), combo$simul_subset.cells,
-                                                       simul_proportional, 5, 'limited')
+    DDLSorter_obj = simulate_cells(DDLSorter_obj, 1000, c('NK cells', 'Proliferative Tcells'), combo$simul_subset.cells,
+                                   simul_proportional, 5, 'limited')
+    saveRDS(DDLSorter_obj, paste('./Results/1_Parameter_Optimization/train/DigitalDLSorter_utils/simulate_cells/', ref, '_', combo_name,
+                                 '.Rdata', sep=''))
+    remove(DDLSorter_obj)
+    invisible(gc())
     
     message('')
     end_sim[ti] = Sys.time()
@@ -300,23 +304,27 @@ for(ref in c('corrected', 'uncorrected')){
     invisible(gc())
   }
 }
-saveRDS(DDLS_objects, './Results/1_Parameter_Optimization/train/DigitalDLSorter_utils')
 
 # 5.2. Create bulk data for training:
-DDLS_objects = readRDS('./Results/1_Parameter_Optimization/train/DigitalDLSorter_utils/DDLS_objects.Rdata')
 bulk_options = expand.grid(c(0, 1), c('no', 'limit_1000'), c(110, 1100), c('YES', 'NO'),
                            c(100, 500), c(10000, 20000), c('YES', 'NO'), stringsAsFactors=F)
 rownames(bulk_options) = apply(expand.grid(c('A1', 'A2'), c('B1', 'B2'), c('C1', 'C2'), c('D1', 'D2'),
                                            c('E1', 'E2'), c('F1', 'F2'), c('G1', 'G2'), stringsAsFactors=F), 1, paste, collapse='')
 colnames(bulk_options) = c('load_min.counts', 'simulation', 'simul_subset.cells', 'simul_proportional',
                            'bulk_n.cells', 'bulk_num.bulk.samples', 'bulk_balanced.type.cells')
+# For simulation 'no', arguments 'simul_subset.cells' and 'simul_proportional' are irrelevant:
+bulk_options = rbind(bulk_options[bulk_options$simulation!='no',],
+                     bulk_options[rownames(unique(bulk_options[bulk_options$simulation=='no',c(1,5,6,7)])),])
+# Arguments of bulk_n.cells=500 and bulk_num.bulk.samples=20000 will be removed. Too much computational burden:
+bulk_options = bulk_options[!(bulk_options$bulk_n.cells==500 & bulk_options$bulk_num.bulk.samples==20000),]
+# ..
 n_params_bulk = dim(bulk_options)[1]
 pb_bulk = txtProgressBar(min=0, max=n_params_bulk * 2, style=3, width=200, char='=')
 init_bulk = numeric(n_params_bulk * 1)
 end_bulk = numeric(n_params_bulk * 1)
 cr=1
-for(ref in c('corrected')){#, 'uncorrected')){
-  for(combo_i in 32:n_params_bulk){
+for(ref in c('uncorrected')){#, 'corrected')){
+  for(combo_i in 1:n_params_bulk){
     if(cr==1) ti = combo_i
     if(cr==2) ti = n_params + combo_i
     init_bulk[ti] <- Sys.time()
@@ -324,13 +332,18 @@ for(ref in c('corrected')){#, 'uncorrected')){
     message(paste(combo_name, '|', ti, '/', length(init_bulk) * 1, sep=' '))
     combo = bulk_options[combo_name, ]
     
+    ###
+    e_combo = substr(combo_name, 9, 10)
+    if(e_combo=='E1') next
+    ###
+    
     bulk_balanced.type.cells = FALSE
     if(combo$bulk_balanced.type.cells=='YES') bulk_balanced.type.cells = TRUE
     
     if(combo$simulation == 'limit_1000'){
       simul_combo = substr(combo_name, 1, 8)
-      if(ref=='corrected') DDLSorter_obj = DDLS_objects$corrected[[simul_combo]]
-      else DDLSorter_obj = DDLS_objects$uncorrected[[simul_combo]]
+      DDLSorter_obj = readRDS(paste('./Results/1_Parameter_Optimization/train/DigitalDLSorter_utils/simulate_cells/',
+                                    ref, '_', simul_combo, '.Rdata', sep=''))
     }
     else{
       DDLSorter_obj = prepare_singlecellexperiment_scReferences(references[[ref]], 'Deconv_cellTypes', 10,

@@ -89,16 +89,22 @@ rownames(parameters_to_optimize$Scaden) = apply(expand.grid(c('A1', 'A2', 'A3'),
 colnames(parameters_to_optimize$Scaden) = c('min.expression', 'batch.size', 'learning.rate', 'n.steps')
 
 # - DigitalDLSorter
-parameters_to_optimize$DigitalDLSorter = expand.grid(c(0, 1), c('no', 'limit_1000'), c(110, 1100), c('YES', 'NO'), c(100, 500),
-                                                     c(10000, 20000), c('YES', 'NO'), c('both', 'single-cell', 'bulk'), c('YES', 'NO'),
-                                                     stringsAsFactors=F)
-rownames(parameters_to_optimize$DigitalDLSorter) = apply(expand.grid(c('A1', 'A2'), c('B1', 'B2'), c('C1', 'C2'), c('D1', 'D2'),
-                                                                     c('E1', 'E2'), c('F1', 'F2'), c('G1', 'G2'),
-                                                                     c('H1', 'H2', 'H3'), c('I1', 'I2'),
-                                                                     stringsAsFactors=F), 1, paste, collapse='')
-colnames(parameters_to_optimize$DigitalDLSorter) = c('load_min.counts', 'simulation', 'simul_subset.cells',
-                                                     'simul_proportional', 'bulk_n.cells', 'bulk_num.bulk.samples',
-                                                     'bulk_balanced.type.cells', 'train_combine', 'predict_normalize')
+options = expand.grid(c(0, 1), c('no', 'limit_1000'), c(110, 1100), c('YES', 'NO'), c(100, 500),
+                      c(10000, 20000), c('YES', 'NO'), c('both', 'single-cell', 'bulk'), c('YES', 'NO'),
+                      stringsAsFactors=F)
+rownames(options) = apply(expand.grid(c('A1', 'A2'), c('B1', 'B2'), c('C1', 'C2'), c('D1', 'D2'),
+                                      c('E1', 'E2'), c('F1', 'F2'), c('G1', 'G2'),
+                                      c('H1', 'H2', 'H3'), c('I1', 'I2'),
+                                      stringsAsFactors=F), 1, paste, collapse='')
+colnames(options) = c('load_min.counts', 'simulation', 'simul_subset.cells',
+                      'simul_proportional', 'bulk_n.cells', 'bulk_num.bulk.samples',
+                      'bulk_balanced.type.cells', 'train_combine', 'predict_normalize')
+# For simulation 'no', arguments 'simul_subset.cells' and 'simul_proportional' are irrelevant:
+options = rbind(options[options$simulation!='no',],
+                options[rownames(unique(options[options$simulation=='no',c(1,5,6,7)])),])
+# Arguments of bulk_n.cells=500 and bulk_num.bulk.samples=20000 will be removed. Too much computational burden:
+options = options[!(options$bulk_n.cells==500 & options$bulk_num.bulk.samples==20000),]
+parameters_to_optimize$DigitalDLSorter = options
 
 # Save combinations in csv files
 for(method in names(parameters_to_optimize)){

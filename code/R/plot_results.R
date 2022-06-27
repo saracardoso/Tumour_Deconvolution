@@ -202,16 +202,22 @@ plot_estimated_vs_groundTruth_single_method = function(proportions, ground_truth
 
 # 2. Scatter plot of estimated vs ground-truth proportions by cell-type
 plot_estimated_vs_groundTruth_perMethod_singleCT = function(proportions, ground_truth, cell_type, cols_vector,
-                                                            plot_title='', xlim=c(0, 1), ylim=c(0, 1)){
+                                                            plot_title=''){
   # Estimation + ground truth data.frame:
   est_props = c()
   ground_vec = c()
   methods_df = c()
+  ymax = c()
+  xmax = c()
   for(method in names(proportions)){
     samps = colnames(proportions[[method]])
     est_props = c(est_props, as.numeric(proportions[[method]][cell_type, samps]))
     ground_vec = c(ground_vec, as.numeric(ground_truth[cell_type, samps]))
     methods_df = c(methods_df, rep(method, length(samps)))
+    ymax = c(ymax, max(as.numeric(proportions[[method]][cell_type, samps])))
+    xrange = (max(as.numeric(ground_truth[cell_type, samps]))-
+               min(as.numeric(ground_truth[cell_type, samps]))) / 2
+    xmax = c(xmax, min(as.numeric(ground_truth[cell_type, samps])) + xrange)
   }
   dv = data.frame(methods = methods_df,
                   estimated_proportions = est_props,
@@ -225,8 +231,8 @@ plot_estimated_vs_groundTruth_perMethod_singleCT = function(proportions, ground_
   for(method in names(proportions)){
     corr_val = cor(dv$ground_truth[dv$methods==method], dv$estimated_proportions[dv$methods==method], method='pearson')
     rmse_val = Metrics::rmse(dv$ground_truth[dv$methods==method], dv$estimated_proportions[dv$methods==method])
-    corr_anotate = paste("italic(r): ", as.character(round(corr_val,3 )), sep='')
-    rmse_anotate = paste('\n italic(RMSE): ', as.character(round(rmse_val,3 )), sep='')
+    corr_anotate = paste("p: ", as.character(round(corr_val,3 )), sep='')
+    rmse_anotate = paste('RMSE: ', as.character(round(rmse_val,3 )), sep='')
     corrs_anotate = c(corrs_anotate, corr_anotate)
     rmses_anotate = c(rmses_anotate, rmse_anotate)
     cell_types_anotate = c(cell_types_anotate, method)
@@ -237,17 +243,22 @@ plot_estimated_vs_groundTruth_perMethod_singleCT = function(proportions, ground_
     ggplot2::geom_point(size=2, alpha=0.6, ggplot2::aes(colour=methods)) +
     ggplot2::geom_abline(intercept=0, slope=1, color="#404040", linetype='dashed') +
     ggplot2::geom_smooth(method='lm', colour='#80b3ff') +
-    ggplot2::xlim(xlim[1], xlim[2]) + ggplot2::ylim(ylim[1], ylim[2]) + ggplot2::ggtitle(plot_title) +
-    ggplot2::facet_wrap(ggplot2::vars(methods))
+    #ggplot2::xlim(xlim[1], xlim[2]) + ggplot2::ylim(ylim[1], ylim[2]) +
+    ggplot2::ggtitle(plot_title) + ggplot2::facet_wrap(ggplot2::vars(methods), scales='free')
   
-  corrs_dat_text = data.frame(label=corrs_anotate, methods=cell_types_anotate, stringsAsFactors=F)
-  plt = plt + ggplot2::geom_text(data=corrs_dat_text, mapping=ggplot2::aes(x=xlim[2]/4, y=ylim[2]-0.01, label=label),
-                                 parse=T, inherit.aes=FALSE)
-  rmses_dat_text = data.frame(label=rmses_anotate, methods=cell_types_anotate, stringsAsFactors=F)
-  plt = plt + ggplot2::geom_text(data=rmses_dat_text, mapping=ggplot2::aes(x=xlim[2]/4, y=ylim[2]-0.05, label=label),
-                                 parse=T, inherit.aes=FALSE) #xlim[2]/4-0.04  ylim[2]-0.1
   
-  plt = plt + ggplot2::scale_colour_manual(values=cols_vector) + ggplot2::theme(legend.position = 'none') + 
+  
+  corrs_dat_text = data.frame(label=paste(rmses_anotate, corrs_anotate, sep=' | '),
+                              methods=cell_types_anotate, x=xmax, y=ymax, stringsAsFactors=F)
+  plt = plt + ggplot2::geom_text(data=corrs_dat_text, mapping=ggplot2::aes(x=x, y=y, label=label),
+                                 parse=F, inherit.aes=FALSE)
+  #rmses_dat_text = data.frame(label=rmses_anotate, methods=cell_types_anotate, 
+  #                            x=xmax, y=ymax-(ymax/1000),
+  #                            stringsAsFactors=F)
+  #plt = plt + ggplot2::geom_text(data=rmses_dat_text, mapping=ggplot2::aes(x=x, y=x, label=label),
+  #                               parse=T, inherit.aes=FALSE)
+  
+  plt = plt + ggplot2::scale_colour_manual(values=cols_vector) + ggplot2::theme(legend.position='none') + 
     ggplot2::xlab('Ground Truth') + ggplot2::ylab('Estimated Proportions')
   
   plt

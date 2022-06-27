@@ -111,6 +111,7 @@ estimate_proportions.DigitalDLSorter = function(bulk.data, sc.reference, cellTyp
     if(simulate.cells){
       DDLSorter_obj = simulate_cells(DDLSorter_obj, simul_n.cells, simul_cell.types, simul_subset.cells, simul_proportional, threads,
                                      simul_add.method)
+      invisible(gc())
     }
     # Calculate minimum and maximum proportions of cell-types by sample in reference to create the minmaxprobs argument
     cts = unique(sc.reference$metadata[,cellType.var])
@@ -128,17 +129,22 @@ estimate_proportions.DigitalDLSorter = function(bulk.data, sc.reference, cellTyp
     min_props[min_props==0] = 0.01
     minmaxprobs = data.frame(Cell_Type=cts, from=min_props*100, to=max_props*100)
     # Generate bulk:
+    invisible(gc())
     DDLSorter_obj = generate_bulk(DDLSorter_obj, minmaxprobs, bulk_num.bulk.samples, bulk_n.cells, bulk_balanced.type.cells, threads)
+    invisible(gc())
     DDLSorter_obj = train_DDLSorter_model(DDLSorter_obj, train_combine, batch.size, train_num.epocs, threads, train_view.metrics.plot)
+    invisible(gc())
     if(pipeline == 'train_predict'){
       message('Predicting...')
       proportions = deconv_DigitalDLSorter(DDLSorter_obj, bulk.data, batch.size, predict_normalize, 'deconv')
+      invisible(gc())
     }
   }
   else{
     # In this case, sc.reference must be a DigitalDLSorter object!
     DDLSorter_obj = sc.reference
     proportions = deconv_DigitalDLSorter(DDLSorter_obj, bulk.data, batch.size, predict_normalize, 'deconv')
+    invisible(gc())
   }
   if(return.model) res_return = list(proportions=proportions, model_DDLS=DDLSorter_obj)
   else res_return = list(proportions=proportions)

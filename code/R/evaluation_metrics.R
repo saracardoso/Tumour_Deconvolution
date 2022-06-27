@@ -24,6 +24,14 @@ rmse_dataset = function(predicted_props_df, ground_truth_df, cell_types){
     rmses$samples = c(rmses$samples, Metrics::rmse(predicted_props_df[cell_types,samp], ground_truth_df[cell_types, samp]))
   }
   names(rmses$samples) = samps
+  
+  rmses$cell_types = c()
+  for(ct in cell_types){
+    rmses$cell_types = c(rmses$cell_types, Metrics::rmse(as.numeric(predicted_props_df[ct, ]),
+                                                         as.numeric(ground_truth_df[ct, colnames(predicted_props_df)])))
+  }
+  names(rmses$cell_types) = cell_types
+  
   rmses$dataset_average = mean(rmses$samples)
   
   return(rmses)
@@ -58,6 +66,14 @@ correlation_dataset = function(predicted_props_df, ground_truth_df, cell_types){
                                                        method='pearson'))
   }
   names(correlations$samples) = samps
+  
+  correlations$cell_types = c()
+  for(ct in cell_types){
+    correlations$cell_types = c(correlations$cell_types, cor(as.numeric(predicted_props_df[ct, ]),
+                                                             as.numeric(ground_truth_df[ct, colnames(predicted_props_df)])))
+  }
+  names(correlations$cell_types) = cell_types
+  
   correlations$dataset_average = mean(correlations$samples)
   
   return(correlations)

@@ -385,12 +385,12 @@ deconv_scdc_multiple_refs = function(bulk_data_expressionSet, scRNAseq_expressio
   n_scLists = length(scRNAseq_expressionSet_list)
   SCDC_proportions = list()
   if(length(available_weight_methods)==1){
+    SCDC_proportions = t(SCDC::wt_prop(SCDC_results$w_table[available_weight_methods, 1:n_scLists], SCDC_results$prop.only))
+  }
+  else{
     for(weight_met in available_weight_methods){
       SCDC_proportions[[weight_met]] = t(SCDC::wt_prop(SCDC_results$w_table[weight_met, 1:n_scLists], SCDC_results$prop.only))
     }
-  }
-  else{
-    SCDC_proportions = t(SCDC::wt_prop(SCDC_results$w_table[available_weight_methods, 1:n_scLists], SCDC_results$prop.only))
   }
   
   

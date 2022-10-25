@@ -1,6 +1,6 @@
-cell_type_colors = c('#011627', '#8b4513', '#f1558e', '#a5be00', '#800080', '#ff9f1c', '#2ec4b6', '#e71d36', '#3e673c', '#f9c22e', '#c4b1ae')
-names(cell_type_colors) = c('Cancer cells', 'Stromal cells', 'Anti-Inflammatory macro/mono', 'Pro-Inflammatory macro/mono', 'Bcells',
-                            'CD4 Tcells', 'Regulatory CD4 Tcells', 'CD8 Tcells', 'Proliferative Tcells', 'NK cells', 'Other cells')
+#cell_type_colors = c('#011627', '#8b4513', '#f1558e', '#a5be00', '#800080', '#ff9f1c', '#2ec4b6', '#e71d36', '#3e673c', '#f9c22e', '#c4b1ae')
+#names(cell_type_colors) = c('Cancer cells', 'Stromal cells', 'Anti-Inflammatory macro/mono', 'Pro-Inflammatory macro/mono', 'Bcells',
+#                            'CD4 Tcells', 'Regulatory CD4 Tcells', 'CD8 Tcells', 'Proliferative Tcells', 'NK cells', 'Other cells')
 
 
 
@@ -82,7 +82,8 @@ scatterPlot_proportions_correction_type = function(proportions_list, ground_trut
   plt = ggplot2::ggplot(data=dv, mapping=ggplot2::aes(ground_truth, estimated_proportions)) +
     ggplot2::geom_point(size=2, alpha=0.6, ggplot2::aes(colour=cell_type)) +
     ggplot2::geom_abline(intercept=0, slope=1, color="#404040", linetype='dashed') +
-    ggplot2::xlim(xlim[1], xlim[2]) + ggplot2::ylim(ylim[1], ylim[2]) + ggplot2::ggtitle(plot_title)
+    ggplot2::ggtitle(plot_title)
+  if(!perCT) plt = plt + ggplot2::xlim(xlim[1], xlim[2]) + ggplot2::ylim(ylim[1], ylim[2])
   
   # Add facets, correlation and rmse according to perCT:
   if(perCT){
@@ -92,6 +93,8 @@ scatterPlot_proportions_correction_type = function(proportions_list, ground_trut
     rmses_anotate = c()
     corrections_anotate = c()
     cell_types_annotate = c()
+    ymax = c()
+    xmax = c()
     for(correction in names(proportions_list)){
       for(ct in cell_types){
         corr_val = cor(dv$ground_truth[dv$corrections==correction & dv$cell_type==ct],
@@ -104,14 +107,24 @@ scatterPlot_proportions_correction_type = function(proportions_list, ground_trut
         rmses_anotate = c(rmses_anotate, rmse_anotate)
         corrections_anotate = c(corrections_anotate, correction)
         cell_types_annotate = c(cell_types_annotate, ct)
+        
+        ymax = c(ymax, max(as.numeric(proportions_list[[correction]][ct, ])))
+        xrange = (max(as.numeric(ground_truth[ct, ]))-
+                    min(as.numeric(ground_truth[ct, ]))) / 2
+        xmax = c(xmax, min(as.numeric(ground_truth[ct, ])) + xrange)
       }
     }
     text_annotations = paste(corrs_anotate, rmses_anotate, sep=', ')
-    dat_text = data.frame(label=text_annotations, corrections=corrections_anotate, cell_type=cell_types_annotate, stringsAsFactors=F)
+    dat_text = data.frame(label=text_annotations, corrections=corrections_anotate, cell_type=cell_types_annotate,
+                          x=xmax, y=ymax, stringsAsFactors=F)
     dat_text$corrections = factor(dat_text$corrections, levels=lev_g)
     dat_text$cell_type = factor(dat_text$cell_type, levels=cell_types)
     
     legend_pos = 'none'
+    
+    # Add correlation and rmse annotation:
+    plt = plt + ggplot2::geom_text(data=dat_text, mapping=ggplot2::aes(x=x, y=y, label=label),
+                                   parse=F, inherit.aes=FALSE)
   }
   else{
     plt = plt + ggplot2::facet_wrap(.~corrections, ncol=ncol, nrow=nrow)
@@ -133,11 +146,11 @@ scatterPlot_proportions_correction_type = function(proportions_list, ground_trut
     dat_text$corrections = factor(dat_text$corrections, levels=lev_g)
     
     legend_pos = legend_pos
+    
+    # Add correlation and rmse annotation:
+    plt = plt + ggplot2::geom_text(data=dat_text, mapping=ggplot2::aes(x=xlim[2]/3.5, y=ylim[2]-0.01, label=label), size=3.2,
+                                   parse=F, inherit.aes=FALSE)
   }
-  
-  # Add correlation and rmse annotation:
-  plt = plt + ggplot2::geom_text(data=dat_text, mapping=ggplot2::aes(x=xlim[2]/3.5, y=ylim[2]-0.01, label=label), size=3.2,
-                                 parse=F, inherit.aes=FALSE)
 
   # Finalise plot:
   plt = plt + ggplot2::geom_smooth(method='lm', colour='#80b3ff') +
@@ -202,7 +215,7 @@ plot_estimated_vs_groundTruth_single_method = function(proportions, ground_truth
 
 # 2. Scatter plot of estimated vs ground-truth proportions by cell-type
 plot_estimated_vs_groundTruth_perMethod_singleCT = function(proportions, ground_truth, cell_type, cols_vector,
-                                                            plot_title=''){
+                                                            plot_title='', scales='free'){
   # Estimation + ground truth data.frame:
   est_props = c()
   ground_vec = c()
@@ -244,7 +257,7 @@ plot_estimated_vs_groundTruth_perMethod_singleCT = function(proportions, ground_
     ggplot2::geom_abline(intercept=0, slope=1, color="#404040", linetype='dashed') +
     ggplot2::geom_smooth(method='lm', colour='#80b3ff') +
     #ggplot2::xlim(xlim[1], xlim[2]) + ggplot2::ylim(ylim[1], ylim[2]) +
-    ggplot2::ggtitle(plot_title) + ggplot2::facet_wrap(ggplot2::vars(methods), scales='free')
+    ggplot2::ggtitle(plot_title) + ggplot2::facet_wrap(ggplot2::vars(methods), scales=scales)
   
   
   

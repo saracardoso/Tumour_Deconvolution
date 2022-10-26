@@ -2,6 +2,8 @@
 
 This project contains the code developed to benchmark tumour deconvolution methods that use scRNAseq data as reference, for colorectal cancer (CRC).
 
+To deconvolute the CRC samples, we used the scRNAseq tumour samples from this [colorectal cancer (CRC) atlas](https://github.com/saracardoso/CRC_ATLAS).
+
 
 ## Methods Tested
 

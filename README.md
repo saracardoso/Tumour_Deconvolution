@@ -1,4 +1,4 @@
-# Tumour_Deconvolution
+# Deconvolution of bulk RNAseq colorectal cancer samples
 
 This project contains the code developed to benchmark tumour deconvolution methods that use scRNAseq data as reference, for colorectal cancer (CRC).
 
@@ -21,8 +21,29 @@ This project contains the code developed to benchmark tumour deconvolution metho
 
 ## Main Results
 
-+ ...
++ Overall, *CIBERSORTx*, *DigitalDLSorter* and *Scaden* are the best methods;
 
-+ ...
++ The best methods to predict each cell-type are:
 
-## 
+	+ Cancer cells: *Scaden*
+	
+	+ Stromal cells: *BisqueRNA*
+
+	+ Macro/mono lineage cells: *BSeqSC*
+
+	+ B-cells: *Scaden*
+
+	+ CD4 T-cells: *CIBERSORTx*
+
+	+ Regulatory CD4 T-cells: *Scaden*
+
+	+ CD8 T-cells: *DigitalDLSorter*
+
+	+ Proliferative T-cells: *MuSiC_wGrouping*
+
+	+ NK cells: *Scaden*
+
++ RNA content bias correction did not improve predictions
+
+
+<!-- ## 4. How to reference this work -->
